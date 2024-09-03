@@ -16,11 +16,10 @@ from gale.factory import AbstractFactory
 from gale.state import BaseState
 from gale.input_handler import InputData
 from gale.text import render_text
+from src.Projectile import Projectile
 
 import settings
 import src.powerups
-
-
 class PlayState(BaseState):
     def enter(self, **params: dict):
         self.level = params["level"]
@@ -36,6 +35,10 @@ class PlayState(BaseState):
             + settings.PADDLE_GROW_UP_POINTS * (self.paddle.size + 1) * self.level
         )
         self.powerups = params.get("powerups", [])
+
+        self.projectiles = params.get("projectiles", [])
+        self.paddle.cannons_active = params.get("cannons_active", False)
+        self.paddle.cannons_fired = params.get("cannons_fired", False)
 
         if not params.get("resume", False):
             self.balls[0].vx = random.randint(-80, 80)
@@ -95,6 +98,17 @@ class PlayState(BaseState):
                     )
                 )
 
+            # cambiar a cañones
+            if random.random() < 0.5:
+                r = brick.get_collision_rect()
+                self.powerups.append(
+                    self.powerups_abstract_factory.get_factory("CannonsPowerUp").create(
+                        r.centerx - 8, r.centery - 8
+                    )
+                )
+        # Actualización de los proyectiles
+        self.update_projectiles(dt)
+
         # Removing all balls that are not in play
         self.balls = [ball for ball in self.balls if ball.in_play]
 
@@ -106,6 +120,7 @@ class PlayState(BaseState):
                 self.state_machine.change("game_over", score=self.score)
             else:
                 self.paddle.dec_size()
+                self.paddle.deactivate_cannons()
                 self.state_machine.change(
                     "serve",
                     level=self.level,
@@ -115,6 +130,7 @@ class PlayState(BaseState):
                     brickset=self.brickset,
                     points_to_next_live=self.points_to_next_live,
                     live_factor=self.live_factor,
+                    cannons_active=self.paddle.cannons_active, 
                 )
 
         # Update powerups
@@ -140,7 +156,39 @@ class PlayState(BaseState):
                 balls=self.balls,
                 points_to_next_live=self.points_to_next_live,
                 live_factor=self.live_factor,
+                cannons_active=self.paddle.cannons_active, 
             )
+
+    def update_projectiles(self, dt: float) -> None:
+        # Actualizar proyectiles y manejar colisiones
+        for projectile in self.projectiles:
+            projectile.update(dt)
+
+            if projectile.is_off_screen():
+                self.projectiles.remove(projectile)
+                continue
+
+            colliding_brick = self.brickset.get_colliding_brick(projectile.get_collision_rect())
+            if colliding_brick and projectile.collides(colliding_brick):
+                colliding_brick.hit()
+                self.score += colliding_brick.score()
+                self.projectiles.remove(projectile)
+                # Reproducir sonido de explosión
+                settings.SOUNDS["paddle_hit"].stop()
+                settings.SOUNDS["explosion1"].play()
+
+        if not self.projectiles and self.paddle.cannons_fired:
+            self.paddle.deactivate_cannons()
+            self.paddle.cannons_fired = False  # Reset after deactivating
+
+    def fire_projectiles(self) -> None:
+        # Dispara proyectiles desde los cañones del paddle si están activos
+        if self.paddle.cannons_active and len(self.projectiles) < 2:
+            settings.SOUNDS["gun_fire"].play()
+            left_projectile = Projectile(self.paddle.x - 12 , self.paddle.y + self.paddle.height // 2)
+            right_projectile = Projectile(self.paddle.x + self.paddle.width + 4, self.paddle.y + self.paddle.height // 2)
+            self.projectiles.extend([left_projectile, right_projectile])
+            self.paddle.mark_cannons_as_fired()
 
     def render(self, surface: pygame.Surface) -> None:
         heart_x = settings.VIRTUAL_WIDTH - 120
@@ -170,6 +218,10 @@ class PlayState(BaseState):
             5,
             (255, 255, 255),
         )
+        
+        # Renderizar proyectiles
+        for projectile in self.projectiles:
+            projectile.render(surface)
 
         self.brickset.render(surface)
 
@@ -192,6 +244,9 @@ class PlayState(BaseState):
                 self.paddle.vx = settings.PADDLE_SPEED
             elif input_data.released and self.paddle.vx > 0:
                 self.paddle.vx = 0
+        elif input_id == "fire_projectiles" and input_data.pressed:
+            # Método para disparar los proyectiles desde los cañones del paddle
+            self.fire_projectiles()
         elif input_id == "pause" and input_data.pressed:
             self.state_machine.change(
                 "pause",
@@ -204,4 +259,7 @@ class PlayState(BaseState):
                 points_to_next_live=self.points_to_next_live,
                 live_factor=self.live_factor,
                 powerups=self.powerups,
+                projectiles=self.projectiles,  # Pasar los proyectiles activos
+                cannons_fired=self.paddle.cannons_fired,  # Pasar el estado de los cañones
+                cannons_active=self.paddle.cannons_active, 
             )

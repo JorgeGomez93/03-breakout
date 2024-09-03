@@ -30,7 +30,8 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_UP, "move_up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_RIGHT, "move_right")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_DOWN, "move_down")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LEFT, "move_left")
-input_handler.InputHandler.set_keyboard_action(input_handler.KEY_SPACE, "pause")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_p, "pause")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_SPACE, "fire_projectiles")
 
 # Size of our actual window
 WINDOW_WIDTH = 1280
@@ -50,6 +51,9 @@ LIVE_POINTS_BASE = 2000
 PADDLE_GROW_UP_POINTS = 200
 
 POWERUP_SPEED = 50
+
+CANNON_WIDTH = 12  # Ancho de los cañones
+CANNON_HEIGHT = 16  # Alto de los cañones
 
 BASE_DIR = Path(__file__).parent
 
@@ -73,6 +77,10 @@ SOUNDS = {
     "life": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "life.wav"),
     "grow_up": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "grow_up.wav"),
     "pause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "pause.wav"),
+        # Nuevos sonidos añadidos
+    "gun_fire": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "gun_fire.wav"),
+    "explosion1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "explosion1.ogg"),
+    "load": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "load.wav"),
 }
 
 TEXTURES = {
@@ -82,6 +90,10 @@ TEXTURES = {
     "spritesheet": pygame.image.load(BASE_DIR / "assets" / "graphics" / "breakout.png"),
     "hearts": pygame.image.load(BASE_DIR / "assets" / "graphics" / "hearts.png"),
     "arrows": pygame.image.load(BASE_DIR / "assets" / "graphics" / "arrows.png"),
+        # Nuevas texturas añadidas
+    "left_cannon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "left_cannon.png"),
+    "right_cannon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "right_cannon.png"),
+    "shot": pygame.image.load(BASE_DIR / "assets" / "graphics" / "shot.png"),
 }
 
 FRAMES = {

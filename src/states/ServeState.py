@@ -33,6 +33,8 @@ class ServeState(BaseState):
         self.points_to_next_live = params.get(
             "points_to_next_live", settings.LIVE_POINTS_BASE
         )
+        # Restaurar el estado de los cañones
+        self.paddle.cannons_active = params.get("cannons_active", False)
 
     def update(self, dt: float) -> None:
         self.paddle.update(dt)
@@ -103,6 +105,7 @@ class ServeState(BaseState):
                 brickset=self.brickset,
                 points_to_next_live=self.points_to_next_live,
                 live_factor=self.live_factor,
+                cannons_active=self.paddle.cannons_active,
             )
 
         if input_id == "move_left":

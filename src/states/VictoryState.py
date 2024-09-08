@@ -29,6 +29,7 @@ class VictoryState(BaseState):
         self.points_to_next_live = params["points_to_next_live"]
         # Restaurar el estado de los cañones
         self.paddle.cannons_active = params.get("cannons_active", False)
+        self.sticky_balls = params.get("sticky_balls", False)  # Conservar estado pegajoso
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if input_id == "enter" and input_data.pressed:
@@ -41,6 +42,7 @@ class VictoryState(BaseState):
                 points_to_next_live=self.points_to_next_live,
                 live_factor=self.live_factor,
                 cannons_active=self.paddle.cannons_active,
+                sticky_balls=self.sticky_balls,  # Restaurar estado pegajoso
             )
 
     def render(self, surface: pygame.Surface) -> None:

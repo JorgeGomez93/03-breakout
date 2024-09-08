@@ -35,6 +35,7 @@ class ServeState(BaseState):
         )
         # Restaurar el estado de los cañones
         self.paddle.cannons_active = params.get("cannons_active", False)
+        self.sticky_balls = params.get("sticky_balls", False)  # Conservar estado pegajoso
 
     def update(self, dt: float) -> None:
         self.paddle.update(dt)
@@ -106,6 +107,7 @@ class ServeState(BaseState):
                 points_to_next_live=self.points_to_next_live,
                 live_factor=self.live_factor,
                 cannons_active=self.paddle.cannons_active,
+                sticky_balls=self.sticky_balls,  # Restaurar estado pegajoso
             )
 
         if input_id == "move_left":

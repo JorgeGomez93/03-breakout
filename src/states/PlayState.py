@@ -39,6 +39,8 @@ class PlayState(BaseState):
         self.projectiles = params.get("projectiles", [])
         self.paddle.cannons_active = params.get("cannons_active", False)
         self.paddle.cannons_fired = params.get("cannons_fired", False)
+        # Nueva variable para gestionar el estado pegajoso
+        self.sticky_balls = params.get("sticky_balls", False)
 
         if not params.get("resume", False):
             self.balls[0].vx = random.randint(-80, 80)
@@ -51,11 +53,17 @@ class PlayState(BaseState):
         self.paddle.update(dt)
 
         for ball in self.balls:
-            ball.update(dt)
-            ball.solve_world_boundaries()
+            if self.sticky_balls and ball.collides(self.paddle):
+                ball.set_sticky(True)
+                ball.x = self.paddle.x + self.paddle.width // 2 - ball.width // 2
+                ball.y = self.paddle.y - ball.height
+            else:
+                # Actualización normal de la bola
+                ball.update(dt)
+                ball.solve_world_boundaries()
 
             # Check collision with the paddle
-            if ball.collides(self.paddle):
+            if ball.collides(self.paddle) and not self.sticky_balls:
                 settings.SOUNDS["paddle_hit"].stop()
                 settings.SOUNDS["paddle_hit"].play()
                 ball.rebound(self.paddle)
@@ -97,12 +105,20 @@ class PlayState(BaseState):
                         r.centerx - 8, r.centery - 8
                     )
                 )
-
-            # cambiar a cañones
-            if random.random() < 0.5:
+            # cañones
+            if random.random() < 0.05:
                 r = brick.get_collision_rect()
                 self.powerups.append(
                     self.powerups_abstract_factory.get_factory("CannonsPowerUp").create(
+                        r.centerx - 8, r.centery - 8
+                    )
+                )
+
+            # Sticky
+            if random.random() < 0.5:
+                r = brick.get_collision_rect()
+                self.powerups.append(
+                    self.powerups_abstract_factory.get_factory("StickyBallPowerUp").create(
                         r.centerx - 8, r.centery - 8
                     )
                 )
@@ -116,6 +132,7 @@ class PlayState(BaseState):
 
         if not self.balls:
             self.lives -= 1
+            self.sticky_balls = False  # Desactiva el estado pegajoso al perder una vida
             if self.lives == 0:
                 self.state_machine.change("game_over", score=self.score)
             else:
@@ -156,7 +173,8 @@ class PlayState(BaseState):
                 balls=self.balls,
                 points_to_next_live=self.points_to_next_live,
                 live_factor=self.live_factor,
-                cannons_active=self.paddle.cannons_active, 
+                cannons_active=self.paddle.cannons_active,
+                sticky_balls=self.sticky_balls,  # Restaurar estado pegajoso
             )
 
     def update_projectiles(self, dt: float) -> None:
@@ -247,6 +265,15 @@ class PlayState(BaseState):
         elif input_id == "fire_projectiles" and input_data.pressed:
             # Método para disparar los proyectiles desde los cañones del paddle
             self.fire_projectiles()
+        elif input_id == "enter" and input_data.pressed:
+            # Utilizar la función común para liberar la bola pegajosa
+            self.reset_sticky_balls()  # Reposicionar las bolas pegajosas
+            for ball in self.balls:
+                if ball.is_sticky():
+                    ball.vx = random.randint(-80, 80)
+                    ball.vy = random.randint(-170, -100)
+                    ball.set_sticky(False)  # Desactivar el modo pegajoso para todas las bolas
+            self.sticky_balls = False
         elif input_id == "pause" and input_data.pressed:
             self.state_machine.change(
                 "pause",
@@ -261,5 +288,12 @@ class PlayState(BaseState):
                 powerups=self.powerups,
                 projectiles=self.projectiles,  # Pasar los proyectiles activos
                 cannons_fired=self.paddle.cannons_fired,  # Pasar el estado de los cañones
-                cannons_active=self.paddle.cannons_active, 
+                cannons_active=self.paddle.cannons_active,
+                sticky_balls=self.sticky_balls,  # Restaurar estado pegajoso
             )
+    def reset_sticky_balls(self):
+        """Reposicionar todas las bolas pegajosas sobre la paleta."""
+        for ball in self.balls:
+            if ball.is_sticky():
+                ball.x = self.paddle.x + self.paddle.width // 2 - ball.width // 2
+                ball.y = self.paddle.y - ball.height

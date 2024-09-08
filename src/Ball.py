@@ -30,6 +30,7 @@ class Ball:
         self.texture = settings.TEXTURES["spritesheet"]
         self.frame = random.randint(0, 6)
         self.in_play = True
+        self._sticky = False  # Añadir un atributo para el estado pegajoso
 
     def get_collision_rect(self) -> pygame.Rect:
         return pygame.Rect(self.x, self.y, self.width, self.height)
@@ -126,3 +127,9 @@ class Ball:
             self.vx = -50 - 8 * d
         elif d < 0 and paddle.vx > 0 and pr.right < settings.VIRTUAL_HEIGHT:
             self.vx = 50 - 8 * d
+
+    def set_sticky(self, sticky: bool) -> None:
+        self.sticky = sticky
+  
+    def is_sticky(self) -> bool:
+        return self._sticky

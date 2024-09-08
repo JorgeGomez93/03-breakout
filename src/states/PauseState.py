@@ -23,6 +23,7 @@ class PauseState(BaseState):
         self.projectiles = params.get("projectiles", [])  # Inicializar los proyectiles activos
         self.paddle.cannons_fired = params.get("cannons_fired", False)  # Restaurar el estado de los cañones
         self.paddle.cannons_active = params.get("cannons_active", False)
+        self.sticky_balls = params.get("sticky_balls", False)  # Conservar estado pegajoso
 
     def render(self, surface: pygame.Surface) -> None:
         heart_x = settings.VIRTUAL_WIDTH - 120
@@ -82,5 +83,6 @@ class PauseState(BaseState):
                 projectiles=self.projectiles,  # Pasar los proyectiles activos
                 cannons_active=self.paddle.cannons_active,  # Pasar el estado de los cañones
                 cannons_fired=self.paddle.cannons_fired,  # Pasar el estado de los cañones
+                sticky_balls=self.sticky_balls,  # Restaurar estado pegajoso
                 resume=True,
             )

@@ -11,5 +11,6 @@ This module contains all of the power ups.
 from src.powerups.PowerUp import PowerUp
 from src.powerups.TwoMoreBall import TwoMoreBall
 from src.powerups.CannonsPowerUp import CannonsPowerUp
+from src.powerups.StickyBallPowerUp import StickyBallPowerUp
 
-(PowerUp, TwoMoreBall, CannonsPowerUp)
+(PowerUp, TwoMoreBall, CannonsPowerUp, StickyBallPowerUp)

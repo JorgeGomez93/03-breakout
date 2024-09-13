@@ -16,6 +16,7 @@ from gale.factory import AbstractFactory
 from gale.state import BaseState
 from gale.input_handler import InputData
 from gale.text import render_text
+from gale.timer import Timer
 from src.Projectile import Projectile
 
 import settings
@@ -39,17 +40,30 @@ class PlayState(BaseState):
         self.projectiles = params.get("projectiles", [])
         self.paddle.cannons_active = params.get("cannons_active", False)
         self.paddle.cannons_fired = params.get("cannons_fired", False)
-        # Nueva variable para gestionar el estado pegajoso
+        self.controls_inverted = params.get("controls_inverted", False)
         self.sticky_balls = params.get("sticky_balls", False)
+
+        self.timer = Timer()
+        self.curse_powerup_end_time = params.get("curse_powerup_end_time", None)
 
         if not params.get("resume", False):
             self.balls[0].vx = random.randint(-80, 80)
             self.balls[0].vy = random.randint(-170, -100)
             settings.SOUNDS["paddle_hit"].play()
+        else:
+            self.paddle.vx = self.paddle.vx or 0
 
         self.powerups_abstract_factory = AbstractFactory("src.powerups")
 
     def update(self, dt: float) -> None:
+        self.timer.update(dt)
+
+        if self.curse_powerup_end_time is not None:
+            self.curse_powerup_end_time -= dt
+            if self.curse_powerup_end_time <= 0:
+                self.curse_powerup_end_time = None
+                self.invert_controls(False)
+
         self.paddle.update(dt)
 
         for ball in self.balls:
@@ -105,7 +119,7 @@ class PlayState(BaseState):
                         r.centerx - 8, r.centery - 8
                     )
                 )
-            # cañones
+            # Cannons
             if random.random() < 0.05:
                 r = brick.get_collision_rect()
                 self.powerups.append(
@@ -114,11 +128,20 @@ class PlayState(BaseState):
                     )
                 )
 
-            # Sticky
-            if random.random() < 0.5:
+            # StickyBall
+            if random.random() < 0.05:
                 r = brick.get_collision_rect()
                 self.powerups.append(
                     self.powerups_abstract_factory.get_factory("StickyBallPowerUp").create(
+                        r.centerx - 8, r.centery - 8
+                    )
+                )
+
+            # CursePowerUp
+            if random.random() < 0.2:  # Ajusta la probabilidad según lo necesites
+                r = brick.get_collision_rect()
+                self.powerups.append(
+                    self.powerups_abstract_factory.get_factory("CursePowerUp").create(
                         r.centerx - 8, r.centery - 8
                     )
                 )
@@ -251,7 +274,26 @@ class PlayState(BaseState):
         for powerup in self.powerups:
             powerup.render(surface)
 
+        if self.curse_powerup_end_time is not None:
+            time_remaining = max(0, int(self.curse_powerup_end_time))
+            render_text(
+                surface,
+                f"Curse Time: {time_remaining}",
+                settings.FONTS["tiny"],
+                settings.VIRTUAL_WIDTH - 200,
+                5,
+                (255, 0, 0),
+            )
+
     def on_input(self, input_id: str, input_data: InputData) -> None:
+
+        # Manejo de controles invertidos
+        if self.controls_inverted:
+            if input_id == "move_left":
+                input_id = "move_right"
+            elif input_id == "move_right":
+                input_id = "move_left"
+
         if input_id == "move_left":
             if input_data.pressed:
                 self.paddle.vx = -settings.PADDLE_SPEED
@@ -263,16 +305,14 @@ class PlayState(BaseState):
             elif input_data.released and self.paddle.vx > 0:
                 self.paddle.vx = 0
         elif input_id == "fire_projectiles" and input_data.pressed:
-            # Método para disparar los proyectiles desde los cañones del paddle
             self.fire_projectiles()
         elif input_id == "enter" and input_data.pressed:
-            # Utilizar la función común para liberar la bola pegajosa
-            self.reset_sticky_balls()  # Reposicionar las bolas pegajosas
+            self.reset_sticky_balls()
             for ball in self.balls:
                 if ball.is_sticky():
                     ball.vx = random.randint(-80, 80)
                     ball.vy = random.randint(-170, -100)
-                    ball.set_sticky(False)  # Desactivar el modo pegajoso para todas las bolas
+                    ball.set_sticky(False)
             self.sticky_balls = False
         elif input_id == "pause" and input_data.pressed:
             self.state_machine.change(
@@ -286,13 +326,18 @@ class PlayState(BaseState):
                 points_to_next_live=self.points_to_next_live,
                 live_factor=self.live_factor,
                 powerups=self.powerups,
-                projectiles=self.projectiles,  # Pasar los proyectiles activos
-                cannons_fired=self.paddle.cannons_fired,  # Pasar el estado de los cañones
+                projectiles=self.projectiles,
+                cannons_fired=self.paddle.cannons_fired,
                 cannons_active=self.paddle.cannons_active,
-                sticky_balls=self.sticky_balls,  # Restaurar estado pegajoso
+                sticky_balls=self.sticky_balls,
+                controls_inverted=self.controls_inverted,
+                curse_powerup_end_time=self.curse_powerup_end_time,
             )
+
+    def invert_controls(self, state: bool) -> None:
+        self.controls_inverted = state
+
     def reset_sticky_balls(self):
-        """Reposicionar todas las bolas pegajosas sobre la paleta."""
         for ball in self.balls:
             if ball.is_sticky():
                 ball.x = self.paddle.x + self.paddle.width // 2 - ball.width // 2

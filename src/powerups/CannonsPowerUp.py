@@ -21,7 +21,7 @@ class CannonsPowerUp(PowerUp):
 
     def __init__(self, x: float, y: float) -> None:
         # Usamos el frame 1 para representar los cañones
-        super().__init__(x, y, frame=1)
+        super().__init__(x, y, 1)
 
     def take(self, play_state: TypeVar("PlayState")) -> None:
         # Activar los cañones del paddle

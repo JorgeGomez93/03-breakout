@@ -10,7 +10,7 @@ class StickyBallPowerUp(PowerUp):
     """
 
     def __init__(self, x: float, y: float) -> None:
-        super().__init__(x, y, frame=0)
+        super().__init__(x, y, 0)
 
     def take(self, play_state: TypeVar("PlayState")) -> None:
         play_state.sticky_balls = True  

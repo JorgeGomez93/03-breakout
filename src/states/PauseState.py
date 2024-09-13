@@ -19,11 +19,13 @@ class PauseState(BaseState):
         self.points_to_next_live = params["points_to_next_live"]
         self.powerups = params["powerups"]
         settings.SOUNDS["pause"].play()
-        # Restaurar el estado de los cañones
-        self.projectiles = params.get("projectiles", [])  # Inicializar los proyectiles activos
-        self.paddle.cannons_fired = params.get("cannons_fired", False)  # Restaurar el estado de los cañones
+        self.projectiles = params.get("projectiles", [])
+        self.paddle.cannons_fired = params.get("cannons_fired", False)
         self.paddle.cannons_active = params.get("cannons_active", False)
-        self.sticky_balls = params.get("sticky_balls", False)  # Conservar estado pegajoso
+        self.sticky_balls = params.get("sticky_balls", False)
+        self.controls_inverted = params.get("controls_inverted", False)
+        self.curse_powerup_end_time = params.get("curse_powerup_end_time", None)
+        self.paddle.vx = 0
 
     def render(self, surface: pygame.Surface) -> None:
         heart_x = settings.VIRTUAL_WIDTH - 120
@@ -80,9 +82,11 @@ class PauseState(BaseState):
                 points_to_next_live=self.points_to_next_live,
                 live_factor=self.live_factor,
                 powerups=self.powerups,
-                projectiles=self.projectiles,  # Pasar los proyectiles activos
-                cannons_active=self.paddle.cannons_active,  # Pasar el estado de los cañones
-                cannons_fired=self.paddle.cannons_fired,  # Pasar el estado de los cañones
-                sticky_balls=self.sticky_balls,  # Restaurar estado pegajoso
+                projectiles=self.projectiles,
+                cannons_active=self.paddle.cannons_active,
+                cannons_fired=self.paddle.cannons_fired,
+                sticky_balls=self.sticky_balls,
+                controls_inverted=self.controls_inverted,
+                curse_powerup_end_time=self.curse_powerup_end_time,
                 resume=True,
             )

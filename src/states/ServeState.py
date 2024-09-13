@@ -33,9 +33,9 @@ class ServeState(BaseState):
         self.points_to_next_live = params.get(
             "points_to_next_live", settings.LIVE_POINTS_BASE
         )
-        # Restaurar el estado de los cañones
         self.paddle.cannons_active = params.get("cannons_active", False)
-        self.sticky_balls = params.get("sticky_balls", False)  # Conservar estado pegajoso
+        self.sticky_balls = params.get("sticky_balls", False)
+        self.paddle.vx = 0
 
     def update(self, dt: float) -> None:
         self.paddle.update(dt)

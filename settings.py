@@ -82,6 +82,8 @@ SOUNDS = {
     "explosion1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "explosion1.ogg"),
     "load": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "load.wav"),
     "sticky": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "sticky.mp3"),
+    "negative": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "negative.mp3"),
+    "noescape": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "NoEscape.ogg"),
 }
 
 TEXTURES = {

@@ -35,10 +35,8 @@ class Paddle:
         # The paddle only move horizontally
         self.vx = 0
 
-        # Estado para manejar los cañones
-        self.cannons_active = False  # <- Inicializar como desactivado
-
-        self.cannons_fired = False  # Nueva variable para rastrear si los cañones han disparado
+        self.cannons_active = False 
+        self.cannons_fired = False
 
     def resize(self, size: int) -> None:
         self.size = size
